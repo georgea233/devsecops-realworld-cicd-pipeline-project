@@ -57,7 +57,7 @@ jobs:
       - name: Terraform Apply
         working-directory: eks-terraform
         run: terraform apply -auto-approve tfplan
-        if: github.ref == 'refs/heads/dev-sec-ops-cicd-pipeline-project-one'  # Automatically apply for dev branch
+        if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
 
       # Step 8: Manual Approval for Production
       - name: Manual Approval for Production
