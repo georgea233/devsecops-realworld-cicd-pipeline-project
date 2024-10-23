@@ -1,0 +1,159 @@
+name: EKS Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - dev  # Dev branch
+      - main  # Production branch
+
+jobs:
+  eks-deployment:
+    runs-on: ubuntu-latest
+
+    # Set environment-specific variables
+    env:
+      AWS_REGION: "us-east-2"  # Set your desired AWS region
+      TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'apply' || 'apply' }}  # Apply action for both branches; you can customize this further if needed
+      # TF_ACTION: 'apply'
+      TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout EKS deployment repo
+        uses: actions/checkout@v3
+        with:
+          repository: georgea233/devsecops-realworld-cicd-pipeline-project
+          ref: ${{ github.ref }}
+
+      # Step 2: Configure AWS credentials
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      # Step 3: Terraform Init
+      - name: Terraform Init
+        working-directory: eks-terraform
+        run: terraform init --reconfigure
+
+      # Step 4: Terraform fmt
+      - name: Terraform fmt
+        working-directory: eks-terraform
+        run: terraform fmt
+
+      # Step 5: Terraform Validate
+      - name: Terraform Validate
+        working-directory: eks-terraform
+        run: terraform validate
+
+      # Step 6: Terraform Plan
+      - name: Terraform Plan
+        working-directory: eks-terraform
+        run: terraform plan -out=tfplan
+
+      # Step 7: Terraform Apply
+      - name: Terraform Apply
+        working-directory: eks-terraform
+        run: terraform apply -auto-approve tfplan
+        if: github.ref == 'refs/heads/dev-sec-ops-cicd-pipeline-project-one'  # Automatically apply for dev branch
+
+      # Step 8: Manual Approval for Production
+      - name: Manual Approval for Production
+        if: github.ref == 'refs/heads/main'  # Only for main branch
+        run: echo "Waiting for manual approval to proceed with production deployment..."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # You can also set up manual approval through GitHub Actions Environment
+
+
+
+# name: EKS Deployment Pipeline - Dev
+
+# on:
+#   push:
+#     branches:
+#       - dev-sec-ops-cicd-pipeline-project-one
+
+# jobs:
+#   eks-deployment:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       TF_ACTION: "apply"  # Automatically applies for dev environment
+
+#     steps:
+#       # Step 1: Checkout the repository
+#       - name: Checkout EKS deployment repo
+#         uses: actions/checkout@v3
+#         with:
+#           repository: georgea233/devsecops-realworld-cicd-pipeline-project
+#           ref: dev
+
+#       # Step 2: Terraform Init
+#       - name: Terraform Init
+#         working-directory: eks-terraform
+#         run: terraform init --reconfigure
+
+#       # Step 3: Terraform Validate
+#       - name: Terraform Validate
+#         working-directory: eks-terraform
+#         run: terraform validate
+
+#       # Step 4: Terraform Plan
+#       - name: Terraform Plan
+#         working-directory: eks-terraform
+#         run: terraform plan
+
+#       # Step 5: Terraform Apply (automatically for dev)
+#       - name: Terraform Apply
+#         working-directory: eks-terraform
+#         run: terraform ${{ env.TF_ACTION }} --auto-approve
+
+
+# # name: EKS Deployment Pipeline - Production
+
+# # on:
+# #   workflow_dispatch:  # Manual trigger for production
+
+# # jobs:
+# #   eks-deployment:
+# #     runs-on: ubuntu-latest
+
+# #     env:
+# #       TF_ACTION: "apply"  # Apply to production only after manual approval
+
+# #     steps:
+# #       # Step 1: Checkout the repository
+# #       - name: Checkout EKS deployment repo
+# #         uses: actions/checkout@v3
+# #         with:
+# #           repository: georgea233/devsecops-realworld-cicd-pipeline-project
+# #           ref: main  # Assuming main is the production branch
+
+# #       # Step 2: Terraform Init
+# #       - name: Terraform Init
+# #         working-directory: eks-terraform
+# #         run: terraform init --reconfigure
+
+# #       # Step 3: Terraform Validate
+# #       - name: Terraform Validate
+# #         working-directory: eks-terraform
+# #         run: terraform validate
+
+# #       # Step 4: Terraform Plan
+# #       - name: Terraform Plan
+# #         working-directory: eks-terraform
+# #         run: terraform plan
+
+# #       # Step 5: Manual approval required before Terraform Apply
+# #       - name: Wait for approval
+# #         uses: actions/pause@v1
+# #         with:
+# #           timeout_seconds: 86400  # 1-day window for approval
+
+# #       # Step 6: Terraform Apply (manual approval required)
+# #       - name: Terraform Apply
+# #         working-directory: eks-terraform
+# #         run: terraform ${{ env.TF_ACTION }} --auto-approve
