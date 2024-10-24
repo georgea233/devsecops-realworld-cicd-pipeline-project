@@ -61,11 +61,17 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: tfplan
-          path: eks-terraform/tfplan  # Path to save the downloaded plan
+          path: eks-terraform/  # Path to save the downloaded plan
+
+      - name: Manual Approval for Production
+        if: github.ref == 'refs/heads/main'  # Only for main branch
+        run: echo "Waiting for manual approval to proceed with production deployment..."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Terraform Apply
         working-directory: eks-terraform
-        run: terraform apply -auto-approve eks-terraform/tfplan
+        run: terraform apply -auto-approve eks-terraform/tfplan/tfplan  # Ensure the correct path is referenced
         if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
 
   eks-destroy:
@@ -89,6 +95,12 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
+      - name: Manual Approval for Destroy
+        if: contains(github.event.head_commit.message, 'destroy')  # Trigger only if 'destroy' is in the commit message
+        run: echo "Waiting for manual approval to proceed with destruction..."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Terraform Init
         working-directory: eks-terraform
         run: terraform init --reconfigure
@@ -97,16 +109,13 @@ jobs:
         working-directory: eks-terraform
         run: terraform validate
 
-      - name: Manual Approval for Destroy
-        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'  # Allow manual approval on both branches
-        run: echo "Waiting for manual approval to proceed with destruction..."
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Terraform Destroy
         working-directory: eks-terraform
         run: terraform destroy -auto-approve
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'  # Allow destroy on both branches
+        if: contains(github.event.head_commit.message, 'destroy')  # Allow destroy only if 'destroy' is in the commit message
+
+
+
 
 
 
