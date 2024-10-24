@@ -1,160 +1,3 @@
-name: Infrastructure Terraform CI/CD
-
-on:
-  push:
-    branches:
-      - main
-      - dev
-      - '*'   # Capture all branches for testing (optional)
-  workflow_dispatch:
-
-jobs:
-  terraform-eks:
-    if: "!contains(github.event.head_commit.message, 'destroy')"  # Skip if the commit message contains "destroy"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
-          aws-region: us-east-2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1.4.0
-        with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./infra-terraform
-
-      - name: Terraform Format
-        run: terraform fmt -check
-        working-directory: ./infra-terraform
-
-      - name: Terraform Validate
-        run: terraform validate
-        working-directory: ./infra-terraform
-
-      - name: Terraform Plan
-        id: plan
-        run: terraform plan -out=tfplan
-        working-directory: ./infra-terraform
-
-      - name: Output Terraform Plan
-        run: terraform show tfplan
-        working-directory: ./infra-terraform
-
-      - name: Upload Terraform Plan
-        uses: actions/upload-artifact@v3
-        with:
-          name: tfplan
-          path: ./infra-terraform/tfplan
-
-  apply-dev:
-    needs: terraform-eks
-    runs-on: ubuntu-latest
-    if: github.ref != 'refs/heads/main'  # Run apply for all branches except main
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
-          aws-region: us-east-2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1.4.0
-        with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./infra-terraform
-
-      - name: Terraform Apply (Direct)
-        run: terraform apply -auto-approve
-        working-directory: ./infra-terraform
-
-  apply:
-    needs: terraform-eks
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'  # Only run apply on the main branch
-    environment:
-      name: production
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
-          aws-region: us-east-2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1.4.0
-        with:
-          terraform_version: 1.6.0
-
-      - name: Download Terraform Plan
-        uses: actions/download-artifact@v3
-        with:
-          name: tfplan
-          path: ./infra-terraform
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./infra-terraform
-
-      - name: Terraform Apply
-        run: terraform apply -auto-approve tfplan
-        working-directory: ./infra-terraform
-
-  destroy:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
-          aws-region: us-east-2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1.4.0
-        with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./infra-terraform
-
-      - name: Terraform Destroy
-        run: terraform destroy -auto-approve
-        working-directory: ./infra-terraform
-
-
-##454
-##$
-
-
 # name: Infrastructure Terraform CI/CD
 
 # on:
@@ -306,4 +149,161 @@ jobs:
 #       - name: Terraform Destroy
 #         run: terraform destroy -auto-approve
 #         working-directory: ./infra-terraform
-# ##rff
+
+
+# ##454
+# ##$
+
+
+# # name: Infrastructure Terraform CI/CD
+
+# # on:
+# #   push:
+# #     branches:
+# #       - main
+# #       - dev
+# #       - '*'   # Capture all branches for testing (optional)
+# #   workflow_dispatch:
+
+# # jobs:
+# #   terraform-eks:
+# #     if: "!contains(github.event.head_commit.message, 'destroy')"  # Skip if the commit message contains "destroy"
+# #     runs-on: ubuntu-latest
+
+# #     steps:
+# #       - name: Checkout code
+# #         uses: actions/checkout@v2
+
+# #       - name: Configure AWS Credentials
+# #         uses: aws-actions/configure-aws-credentials@v1
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+# #           aws-region: us-east-2
+
+# #       - name: Set up Terraform
+# #         uses: hashicorp/setup-terraform@v1.4.0
+# #         with:
+# #           terraform_version: 1.6.0
+
+# #       - name: Terraform Init
+# #         run: terraform init
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Format
+# #         run: terraform fmt -check
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Validate
+# #         run: terraform validate
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Plan
+# #         id: plan
+# #         run: terraform plan -out=tfplan
+# #         working-directory: ./infra-terraform
+
+# #       - name: Output Terraform Plan
+# #         run: terraform show tfplan
+# #         working-directory: ./infra-terraform
+
+# #       - name: Upload Terraform Plan
+# #         uses: actions/upload-artifact@v3
+# #         with:
+# #           name: tfplan
+# #           path: ./infra-terraform/tfplan
+
+# #   apply-dev:
+# #     needs: terraform-eks
+# #     runs-on: ubuntu-latest
+# #     if: github.ref != 'refs/heads/main'  # Run apply for all branches except main
+
+# #     steps:
+# #       - name: Checkout code
+# #         uses: actions/checkout@v2
+
+# #       - name: Configure AWS Credentials
+# #         uses: aws-actions/configure-aws-credentials@v1
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+# #           aws-region: us-east-2
+
+# #       - name: Set up Terraform
+# #         uses: hashicorp/setup-terraform@v1.4.0
+# #         with:
+# #           terraform_version: 1.6.0
+
+# #       - name: Terraform Init
+# #         run: terraform init
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Apply (Direct)
+# #         run: terraform apply -auto-approve
+# #         working-directory: ./infra-terraform
+
+# #   apply:
+# #     needs: terraform-eks
+# #     runs-on: ubuntu-latest
+# #     if: github.ref == 'refs/heads/main'  # Only run apply on the main branch
+# #     environment:
+# #       name: production
+
+# #     steps:
+# #       - name: Checkout code
+# #         uses: actions/checkout@v2
+
+# #       - name: Configure AWS Credentials
+# #         uses: aws-actions/configure-aws-credentials@v1
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+# #           aws-region: us-east-2
+
+# #       - name: Set up Terraform
+# #         uses: hashicorp/setup-terraform@v1.4.0
+# #         with:
+# #           terraform_version: 1.6.0
+
+# #       - name: Download Terraform Plan
+# #         uses: actions/download-artifact@v3
+# #         with:
+# #           name: tfplan
+# #           path: ./infra-terraform
+
+# #       - name: Terraform Init
+# #         run: terraform init
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Apply
+# #         run: terraform apply -auto-approve tfplan
+# #         working-directory: ./infra-terraform
+
+# #   destroy:
+# #     runs-on: ubuntu-latest
+# #     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
+
+# #     steps:
+# #       - name: Checkout code
+# #         uses: actions/checkout@v2
+
+# #       - name: Configure AWS Credentials
+# #         uses: aws-actions/configure-aws-credentials@v1
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} 
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} 
+# #           aws-region: us-east-2
+
+# #       - name: Set up Terraform
+# #         uses: hashicorp/setup-terraform@v1.4.0
+# #         with:
+# #           terraform_version: 1.6.0
+
+# #       - name: Terraform Init
+# #         run: terraform init
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Destroy
+# #         run: terraform destroy -auto-approve
+# #         working-directory: ./infra-terraform
+# # ##rff
