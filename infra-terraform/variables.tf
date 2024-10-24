@@ -10,6 +10,7 @@ variable "aws_region" {
 #   default     = "george"
 # }
 
+## IAM role for Jenkins CI
 variable "iam_role_name" {
   description = "Name of the IAM role for Jenkins CI"
   default     = "AWS-EC2-Administrator-Role"
