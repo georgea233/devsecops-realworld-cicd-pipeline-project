@@ -1,14 +1,15 @@
-name: Infrastructure and EKS Deployment
+name: Infrastructure Deployment
 
 on:
   push:
     branches:
       - main
       - dev
+      - '*'  # This matches all branches
   workflow_dispatch:
 
 jobs:
-  # First job: Creates the infrastructure
+  # Job to create the infrastructure
   terraform-infra:
     runs-on: ubuntu-latest
     steps:
@@ -34,44 +35,14 @@ jobs:
       - name: Terraform Plan for Infrastructure
         run: terraform plan -out=tfplan
         working-directory: ./infra-terraform
+        if: github.ref == 'refs/heads/main'  # Only plan if on main branch
 
       - name: Apply Infrastructure
         run: terraform apply -auto-approve tfplan
         working-directory: ./infra-terraform
+        if: github.ref == 'refs/heads/dev' || github.ref != 'refs/heads/main'  # Apply for dev or any other branch
 
-  # Second job: Deploys EKS, only runs after the first job is successful
-  eks-deployment:
-    needs: terraform-infra  # This job depends on the terraform-infra job
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-2
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v1.4.0
-        with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init for EKS
-        run: terraform init
-        working-directory: ./eks-terraform
-
-      - name: Terraform Plan for EKS
-        run: terraform plan -out=tfplan
-        working-directory: ./eks-terraform
-
-      - name: Apply EKS
-        run: terraform apply -auto-approve tfplan
-        working-directory: ./eks-terraform
-
-  # Third job: Destroys both infrastructure and EKS if triggered
+  # Job to destroy infrastructure if triggered
   destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
@@ -98,11 +69,3 @@ jobs:
       - name: Terraform Destroy for Infrastructure
         run: terraform destroy -auto-approve
         working-directory: ./infra-terraform
-
-      - name: Terraform Init for EKS
-        run: terraform init
-        working-directory: ./eks-terraform
-
-      - name: Terraform Destroy for EKS
-        run: terraform destroy -auto-approve
-        working-directory: ./eks-terraform
