@@ -52,7 +52,15 @@ resource "aws_iam_policy" "jenkins_eks_policy" {
           "eks:DescribeCluster",
           "eks:ListClusters",
           "eks:ListNodegroups",
-          "eks:DescribeNodegroup"
+          "eks:DescribeNodegroup",
+          "eks:CreateNodegroup",
+          "eks:DeleteNodegroup",
+          "eks:UpdateNodegroupConfig",
+          "eks:UpdateClusterConfig",
+          "eks:ListFargateProfiles",
+          "eks:DescribeFargateProfile",
+          "eks:CreateFargateProfile",
+          "eks:DeleteFargateProfile"
         ],
         Resource = "*"
       }
