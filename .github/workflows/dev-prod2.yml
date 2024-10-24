@@ -1,15 +1,15 @@
-name: Infrastructure Deployment
+name: Infrastructure and EKS Deployment
 
 on:
   push:
     branches:
       - main
       - dev
-      - '*'  # This matches all branches
+      - '*'   # Capture all branches for testing (optional)
   workflow_dispatch:
 
 jobs:
-  # Job to create the infrastructure
+  # First job: Creates the infrastructure
   terraform-infra:
     runs-on: ubuntu-latest
     steps:
@@ -35,14 +35,12 @@ jobs:
       - name: Terraform Plan for Infrastructure
         run: terraform plan -out=tfplan
         working-directory: ./infra-terraform
-        if: github.ref == 'refs/heads/main'  # Only plan if on main branch
 
       - name: Apply Infrastructure
         run: terraform apply -auto-approve tfplan
         working-directory: ./infra-terraform
-        if: github.ref == 'refs/heads/dev' || github.ref != 'refs/heads/main'  # Apply for dev or any other branch
 
-  # Job to destroy infrastructure if triggered
+  # Third job: Destroys both infrastructure and EKS if triggered
   destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
