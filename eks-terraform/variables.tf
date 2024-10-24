@@ -4,11 +4,11 @@ variable "aws_region" {
   default     = "us-east-2"
 }
 
-variable "profile" {
-  description = "The AWS profile to use"
-  type        = string
-  default     = "george"
-}
+# variable "profile" {
+#   description = "The AWS profile to use"
+#   type        = string
+#   default     = "george"
+# }
 
 variable "iam_role_name" {
   description = "Name of the IAM role for Jenkins CI"
