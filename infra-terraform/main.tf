@@ -1,4 +1,4 @@
-# IAM role for Jenkins CI
+# IAM Role for Jenkins CI
 resource "aws_iam_role" "jenkins_ci" {
   name = var.iam_role_name
 
@@ -9,7 +9,7 @@ resource "aws_iam_role" "jenkins_ci" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "ec2.amazonaws.com"
+          Service = "ec2.amazonaws.com"  # Adjust if necessary for different deployment
         }
       }
     ]
@@ -19,7 +19,7 @@ resource "aws_iam_role" "jenkins_ci" {
 # Attach AdministratorAccess policy to Jenkins CI role
 resource "aws_iam_role_policy_attachment" "jenkins_ci" {
   role       = aws_iam_role.jenkins_ci.name
-  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"  # Consider a more restrictive policy if possible
 }
 
 # Attach necessary EKS permissions to Jenkins CI role
@@ -38,11 +38,40 @@ resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
   role       = aws_iam_role.jenkins_ci.name
 }
 
+# Define a custom inline policy for EKS access
+resource "aws_iam_policy" "jenkins_eks_policy" {
+  name        = "${var.iam_role_name}-eks-policy"
+  description = "Custom policy for Jenkins to access EKS resources"
+  
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "eks:DescribeCluster",
+          "eks:ListClusters",
+          "eks:ListNodegroups",
+          "eks:DescribeNodegroup"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Attach the custom EKS policy to the Jenkins CI role
+resource "aws_iam_role_policy_attachment" "jenkins_eks_policy_attachment" {
+  policy_arn = aws_iam_policy.jenkins_eks_policy.arn
+  role       = aws_iam_role.jenkins_ci.name
+}
+
 # Create an instance profile for Jenkins
 resource "aws_iam_instance_profile" "jenkins_instance_profile" {
   name = var.instance_profile_name
   role = aws_iam_role.jenkins_ci.name
 }
+
 
 # VPC data
 data "aws_vpc" "default" {
