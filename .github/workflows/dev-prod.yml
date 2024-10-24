@@ -13,7 +13,7 @@ jobs:
 
     env:
       AWS_REGION: "us-east-2"
-      TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'apply' || 'apply' }}  # Apply action for both branches
+      TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'destroy' || 'destroy' }}  # Apply action for both branches
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
 
     steps:
