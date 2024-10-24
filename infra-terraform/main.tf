@@ -158,12 +158,12 @@ resource "aws_iam_role" "eks_node_group" {
 }
 
 # Attach necessary policies to EKS Node Group Role
-resource "aws_iam_role_policy_attachment" "eks_worker_node_policy" {
+resource "aws_iam_role_policy_attachment" "eks_worker_node_policy_ng" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
   role       = aws_iam_role.eks_node_group.name
 }
 
-resource "aws_iam_role_policy_attachment" "eks_cni_policy" {
+resource "aws_iam_role_policy_attachment" "eks_cni_policy_ng" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
   role       = aws_iam_role.eks_node_group.name
 }
@@ -189,8 +189,8 @@ resource "aws_eks_node_group" "example" {
   instance_types = ["t2.xlarge"]
 
   depends_on = [
-    aws_iam_role_policy_attachment.eks_worker_node_policy,
-    aws_iam_role_policy_attachment.eks_cni_policy,
+    aws_iam_role_policy_attachment.eks_worker_node_policy_ng,
+    aws_iam_role_policy_attachment.eks_cni_policy_ng,
     aws_iam_role_policy_attachment.ecs_registry_read_only,
   ]
 }
