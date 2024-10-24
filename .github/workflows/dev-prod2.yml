@@ -8,6 +8,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # First job: Creates the infrastructure
   terraform-infra:
     runs-on: ubuntu-latest
     steps:
@@ -38,8 +39,9 @@ jobs:
         run: terraform apply -auto-approve tfplan
         working-directory: ./infra-terraform
 
+  # Second job: Deploys EKS, only runs after the first job is successful
   eks-deployment:
-    needs: terraform-infra  # This job depends on the infra job
+    needs: terraform-infra  # This job depends on the terraform-infra job
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -69,6 +71,7 @@ jobs:
         run: terraform apply -auto-approve tfplan
         working-directory: ./eks-terraform
 
+  # Third job: Destroys both infrastructure and EKS if triggered
   destroy:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
@@ -103,4 +106,3 @@ jobs:
       - name: Terraform Destroy for EKS
         run: terraform destroy -auto-approve
         working-directory: ./eks-terraform
-
