@@ -5,15 +5,15 @@ on:
     branches:
       - dev  # Dev branch
       - main  # Production branch
+  workflow_dispatch:  # Allows manual triggering of workflows
 
 jobs:
   eks-deployment:
     runs-on: ubuntu-latest
-    environment: Production  # Specify the environment for deployment approvals
 
     env:
       AWS_REGION: "us-east-2"  # Set your desired AWS region
-      TF_ACTION: ${{ contains(github.event.head_commit.message, 'destroy') && 'destroy' || 'apply' }}  # Changes to destroy if the commit message contains 'destroy'
+      TF_ACTION: ${{ contains(github.event.head_commit.message, 'destroy') && 'destroy' || 'apply' }}  # Action based on commit message
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
 
     steps:
@@ -65,9 +65,9 @@ jobs:
 
       - name: Manual Approval for Production
         if: github.ref == 'refs/heads/main'  # Only for main branch
-        run: echo "Waiting for manual approval to proceed with production deployment..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "Waiting for manual approval to proceed with production deployment..."
 
       - name: Terraform Apply
         working-directory: eks-terraform
@@ -76,7 +76,7 @@ jobs:
 
   eks-destroy:
     runs-on: ubuntu-latest
-    needs: eks-deployment  # Ensure this runs after deployment
+    if: contains(github.event.head_commit.message, 'destroy') || github.event_name == 'workflow_dispatch'  # Trigger if 'destroy' is in the commit message or if manually triggered
     env:
       AWS_REGION: "us-east-2"  # Set your desired AWS region
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Set environment variable for destroy
@@ -96,10 +96,9 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Manual Approval for Destroy
-        if: contains(github.event.head_commit.message, 'destroy')  # Trigger only if 'destroy' is in the commit message
-        run: echo "Waiting for manual approval to proceed with destruction..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "Waiting for manual approval to proceed with destruction..."
 
       - name: Terraform Init
         working-directory: eks-terraform
@@ -113,6 +112,46 @@ jobs:
         working-directory: eks-terraform
         run: terraform destroy -auto-approve
         if: contains(github.event.head_commit.message, 'destroy')  # Allow destroy only if 'destroy' is in the commit message
+
+  # New Job for Manual Destroy
+  manual-destroy:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'  # Run only when manually triggered
+    env:
+      AWS_REGION: "us-east-2"  # Set your desired AWS region
+      TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Set environment variable for destroy
+
+    steps:
+      - name: Checkout EKS deployment repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Manual Approval for Destroy
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "Waiting for manual approval to proceed with destruction..."
+
+      - name: Terraform Init
+        working-directory: eks-terraform
+        run: terraform init --reconfigure
+
+      - name: Terraform Validate
+        working-directory: eks-terraform
+        run: terraform validate
+
+      - name: Terraform Destroy
+        working-directory: eks-terraform
+        run: terraform destroy -auto-approve
+
 
 
 
