@@ -30,30 +30,30 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./terraform/eks  # Updated to reflect the correct directory
+        working-directory: ./eks-terraform  # Updated to reflect the correct directory
 
       - name: Terraform Format
         run: terraform fmt -check
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Terraform Validate
         run: terraform validate
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Terraform Plan
         id: plan
         run: terraform plan -out=tfplan
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Output Terraform Plan
         run: terraform show tfplan
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Upload Terraform Plan
         uses: actions/upload-artifact@v3
         with:
           name: tfplan
-          path: ./terraform/eks/tfplan
+          path: ./eks-terraform/tfplan
 
   apply-dev:
     needs: terraform-eks
@@ -78,11 +78,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Terraform Apply (Direct)
         run: terraform apply -auto-approve
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
   apply:
     needs: terraform-eks
@@ -111,7 +111,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: tfplan
-          path: ./terraform/eks
+          path: ./eks-terraform
 
       # - name: Manual Approval for Production
       #   uses: peter-evans/approval-action@v2  # Manual approval step
@@ -120,11 +120,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Terraform Apply
         run: terraform apply -auto-approve tfplan
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
   destroy:
     runs-on: ubuntu-latest
@@ -148,11 +148,11 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
-        working-directory: ./terraform/eks
+        working-directory: ./eks-terraform
 
 
 
