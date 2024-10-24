@@ -3,13 +3,14 @@ name: Terraform EKS CI/CD
 on:
   push:
     branches:
-      - main  # Deploy to production when changes are pushed to the main branch
-      - dev   # Deploy to development when changes are pushed to the dev branch
+      - main
+      - dev
       - '*'   # Capture all branches for testing (optional)
-  workflow_dispatch:  # Allows for manual triggering of EKS deployment or destroy
+  workflow_dispatch:
 
 jobs:
   terraform-eks:
+    if: "!contains(github.event.head_commit.message, 'destroy')"  # Skip if the commit message contains "destroy"
     runs-on: ubuntu-latest
 
     steps:
@@ -30,7 +31,7 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ./eks-terraform  # Updated to reflect the correct directory
+        working-directory: ./eks-terraform
 
       - name: Terraform Format
         run: terraform fmt -check
@@ -89,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'  # Only run apply on the main branch
     environment:
-      name: production  # Add production environment for main branch
+      name: production
 
     steps:
       - name: Checkout code
@@ -112,11 +113,6 @@ jobs:
         with:
           name: tfplan
           path: ./eks-terraform
-
-      # - name: Manual Approval for Production
-      #   uses: peter-evans/approval-action@v2  # Manual approval step
-      #   with:
-      #     environment: production  # Specify production environment for manual approval
 
       - name: Terraform Init
         run: terraform init
@@ -144,18 +140,7 @@ jobs:
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v1.4.0
         with:
-          terraform_version: 1.6.0
-
-      - name: Terraform Init
-        run: terraform init
-        working-directory: ./eks-terraform
-
-      - name: Terraform Destroy
-        run: terraform destroy -auto-approve
-        working-directory: ./eks-terraform
-
-
-##
+          terraform_version
 
 
 # name: EKS Deployment Pipeline
