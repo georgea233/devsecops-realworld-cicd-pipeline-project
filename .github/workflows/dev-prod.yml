@@ -49,12 +49,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: tfplan
-          path: eks-terraform/tfplan  # Path where the plan is saved
+          path: eks-terraform/tfplan
 
-      - name: Terraform Apply (Dev)
-        working-directory: eks-terraform
-        run: terraform apply -auto-approve tfplan
-        if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
+      - name: Cleanup Previous tfplan
+        run: |
+          rm -rf eks-terraform/tfplan || true  # Remove existing tfplan directory if it exists
 
       - name: Download Terraform Plan for Production
         if: github.ref == 'refs/heads/main'  # Only for main branch
@@ -63,10 +62,16 @@ jobs:
           name: tfplan
           path: eks-terraform/tfplan  # Path to save the downloaded plan
 
-      - name: Terraform Apply (Production)
+      - name: Terraform Apply
         working-directory: eks-terraform
-        run: terraform apply -auto-approve eks-terraform/tfplan  # Apply the downloaded plan
-        if: github.ref == 'refs/heads/main'  # Apply for production branch
+        run: terraform apply -auto-approve tfplan
+        if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
+
+      - name: Manual Approval for Production
+        if: github.ref == 'refs/heads/main'  # Only for main branch
+        run: echo "Waiting for manual approval to proceed with production deployment..."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   eks-destroy:
     runs-on: ubuntu-latest
@@ -95,7 +100,7 @@ jobs:
 
       - name: Terraform Validate
         working-directory: eks-terraform
-        run: terraform validate  # Validate the configuration before destroy
+        run: terraform validate
 
       - name: Manual Approval for Destroy
         if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'  # Allow manual approval on both branches
@@ -107,6 +112,7 @@ jobs:
         working-directory: eks-terraform
         run: terraform destroy -auto-approve
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'  # Allow destroy on both branches
+
 
 
 
