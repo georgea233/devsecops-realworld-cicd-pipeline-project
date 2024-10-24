@@ -1,0 +1,82 @@
+# image: hashicorp/terraform:latest
+
+# before_script:
+#   - apt-get update && apt-get install -y git
+#   - echo "Configuring AWS CLI"
+#   - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+#   - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+#   - aws configure set default.region $AWS_DEFAULT_REGION
+
+# stages:
+#   - terraform-fmt
+#   - terraform-init
+#   - terraform-validate
+#   - terraform-plan
+#   - terraform-apply
+#   - terraform-destroy  # Added destroy stage
+
+# variables:
+#   TF_IN_AUTOMATION: "true"
+#   TF_VAR_action: "apply"  # Default action can be "apply" or "destroy"
+
+# terraform-fmt:
+#   stage: terraform-fmt
+#   script:
+#     - cd eks-terraform  # Navigate to the directory containing your Terraform files
+#     - terraform fmt -check
+#   tags:
+#     - terraform
+
+# terraform-init:
+#   stage: terraform-init
+#   script:
+#     - cd eks-terraform  # Navigate to the directory containing your Terraform files
+#     - terraform init --reconfigure
+#   dependencies:
+#     - terraform-fmt  # Ensure this stage runs after terraform-fmt
+#   tags:
+#     - terraform
+
+# terraform-validate:
+#   stage: terraform-validate
+#   script:
+#     - cd eks-terraform  # Ensure you're in the correct directory
+#     - terraform validate
+#   dependencies:
+#     - terraform-init  # Ensure this stage runs after terraform-init
+#   tags:
+#     - terraform
+
+# terraform-plan:
+#   stage: terraform-plan
+#   script:
+#     - cd eks-terraform  # Ensure you're in the correct directory
+#     - terraform plan
+#   dependencies:
+#     - terraform-validate  # Ensure this stage runs after terraform-validate
+#   tags:
+#     - terraform
+
+# terraform-apply:
+#   stage: terraform-apply
+#   script:
+#     - cd eks-terraform  # Ensure you're in the correct directory
+#     - terraform ${TF_VAR_action} --auto-approve
+#   when: manual  # Run this step manually to control the apply action
+#   dependencies:
+#     - terraform-plan  # Ensure this stage runs after terraform-plan
+#   tags:
+#     - terraform
+
+# terraform-destroy:
+#   stage: terraform-destroy
+#   script:
+#     - cd eks-terraform  # Ensure you're in the correct directory
+#     - terraform destroy --auto-approve  # Automatically approve destruction
+#   when: manual  # This should be triggered manually to avoid accidental destruction
+#   tags:
+#     - terraform
+
+# # Trigger the pipeline on push to the main branch
+# only:
+#   - main
