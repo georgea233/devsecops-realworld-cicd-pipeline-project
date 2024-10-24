@@ -50,11 +50,11 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: tfplan
-          path: eks-terraform/tfplan
+          path: eks-terraform/tfplan  # Path to the tfplan file
 
       - name: Cleanup Previous tfplan
         run: |
-          rm -rf eks-terraform/tfplan || true  # Remove existing tfplan directory if it exists
+          rm -rf eks-terraform/tfplan || true  # Remove existing tfplan if it exists
 
       - name: Download Terraform Plan for Production
         if: github.ref == 'refs/heads/main'  # Only for main branch
@@ -71,8 +71,8 @@ jobs:
 
       - name: Terraform Apply
         working-directory: eks-terraform
-        run: terraform apply -auto-approve eks-terraform/tfplan  # Ensure the correct path is referenced
-        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'destroy') == false  # Only apply if not a destroy command
+        run: terraform apply -auto-approve tfplan  # Use the correct path to the tfplan file
+        if: github.ref == 'refs/heads/dev' || (github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, 'destroy') == false)  # Only apply if not a destroy command
 
   eks-destroy:
     runs-on: ubuntu-latest
