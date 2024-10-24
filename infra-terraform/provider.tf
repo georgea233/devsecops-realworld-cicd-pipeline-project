@@ -12,4 +12,3 @@ provider "aws" {
   # profile = var.profile
 }
 
-#@45
