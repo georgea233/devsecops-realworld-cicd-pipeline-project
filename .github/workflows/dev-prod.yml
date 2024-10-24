@@ -152,4 +152,3 @@ jobs:
         run: terraform destroy -auto-approve
         working-directory: ./eks-terraform
 
-        ##
