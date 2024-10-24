@@ -20,7 +20,7 @@ jobs:
       TF_ACTION: ${{ contains(github.event.head_commit.message, 'destroy') && 'destroy' || 'apply' }}  # Change to destroy if the commit message contains 'destroy'
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
 
-
+##
     steps:
       - name: Checkout EKS deployment repo
         uses: actions/checkout@v3
