@@ -27,7 +27,7 @@ variable "instance_name" {
 }
 variable "instance_type" {
   description = "Instance type for the Jenkins CI instance"
-  default     = "t2.xlarge"
+  default     = "t2.large"
 }
 
 variable "key_name" {
