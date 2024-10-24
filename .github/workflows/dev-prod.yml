@@ -124,9 +124,9 @@ jobs:
 
   destroy:
     runs-on: ubuntu-latest
-    # if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
 
-    if: github.event_name == 'workflow_dispatch'  # Only run destroy when manually triggered
+    # if: github.event_name == 'workflow_dispatch'  # Only run destroy when manually triggered
 
     steps:
       - name: Checkout code
