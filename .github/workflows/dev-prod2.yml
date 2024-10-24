@@ -28,15 +28,15 @@ jobs:
 
       - name: Terraform Init for Infrastructure
         run: terraform init
-        working-directory: ./infrastructure
+        working-directory: ./infra-terraform
 
       - name: Terraform Plan for Infrastructure
         run: terraform plan -out=tfplan
-        working-directory: ./infrastructure
+        working-directory: ./infra-terraform
 
       - name: Apply Infrastructure
         run: terraform apply -auto-approve tfplan
-        working-directory: ./infrastructure
+        working-directory: ./infra-terraform
 
   eks-deployment:
     needs: terraform-infra  # This job depends on the infra job
@@ -90,11 +90,11 @@ jobs:
 
       - name: Terraform Init for Infrastructure
         run: terraform init
-        working-directory: ./infrastructure
+        working-directory: ./infra-terraform
 
       - name: Terraform Destroy for Infrastructure
         run: terraform destroy -auto-approve
-        working-directory: ./infrastructure
+        working-directory: ./infra-terraform
 
       - name: Terraform Init for EKS
         run: terraform init
@@ -103,166 +103,3 @@ jobs:
       - name: Terraform Destroy for EKS
         run: terraform destroy -auto-approve
         working-directory: ./eks-terraform
-
-
-
-
-
-# name: EKS Deployment Pipeline
-
-# on:
-#   push:
-#     branches:
-#       - dev  # Dev branch
-#       - main  # Production branch
-
-# jobs:
-#   eks-deployment:
-#     runs-on: ubuntu-latest
-
-#     # Set environment-specific variables
-#     env:
-#       AWS_REGION: "us-east-2"  # Set your desired AWS region
-#       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Set environment variable for Terraform
-
-#     steps:
-#       # Step 1: Checkout the repository
-#       - name: Checkout EKS deployment repo
-#         uses: actions/checkout@v3
-#         with:
-#           repository: georgea233/devsecops-realworld-cicd-pipeline-project
-#           ref: ${{ github.ref }}
-
-#       # Step 2: Configure AWS credentials
-#       - name: Configure AWS credentials
-#         uses: aws-actions/configure-aws-credentials@v1
-#         with:
-#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#           aws-region: ${{ env.AWS_REGION }}
-
-#       # Step 3: Terraform Init
-#       - name: Terraform Init
-#         working-directory: eks-terraform
-#         run: terraform init --reconfigure
-
-#       # Step 4: Terraform fmt
-#       - name: Terraform fmt
-#         working-directory: eks-terraform
-#         run: terraform fmt
-
-#       # Step 5: Terraform Validate
-#       - name: Terraform Validate
-#         working-directory: eks-terraform
-#         run: terraform validate
-
-#       # Step 6: Terraform Plan
-#       - name: Terraform Plan
-#         working-directory: eks-terraform
-#         run: terraform plan -out=tfplan
-
-#       # Step 7: Terraform Apply for Dev
-#       - name: Terraform Apply for Development
-#         working-directory: eks-terraform
-#         run: terraform apply -auto-approve tfplan
-#         if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
-#         env:
-#           TF_ACTION: 'apply'  # Optional: You can keep it for clarity
-
-#       # Step 8: Manual Approval for Production
-#       - name: Manual Approval for Production
-#         if: github.ref == 'refs/heads/main'  # Only for main branch
-#         env:
-#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#         run: echo "Waiting for manual approval to proceed with production deployment..."
-#         # This step can also be configured through GitHub Actions Environment
-#         # You can set the environment to "production" to enforce manual approval
-#         env:
-#           GITHUB_ENV: production  # Set the environment to production for manual approval
-
-# name: EKS Deployment Pipeline - Dev
-
-# on:
-#   push:
-#     branches:
-#       - dev  # Automatically triggers on push to the dev branch
-
-# jobs:
-#   eks-deployment:
-#     runs-on: ubuntu-latest
-
-#     env:
-#       TF_ACTION: "apply"  # Automatically applies for dev environment
-
-#     steps:
-#       # Step 1: Checkout the repository
-#       - name: Checkout EKS deployment repo
-#         uses: actions/checkout@v3
-#         with:
-#           repository: awanmbandi/realworld-microservice-project
-#           ref: dev
-
-#       # Step 2: Terraform Init
-#       - name: Terraform Init
-#         working-directory: eks-terraform
-#         run: terraform init --reconfigure
-
-#       # Step 3: Terraform Validate
-#       - name: Terraform Validate
-#         working-directory: eks-terraform
-#         run: terraform validate
-
-#       # Step 4: Terraform Plan
-#       - name: Terraform Plan
-#         working-directory: eks-terraform
-#         run: terraform plan
-
-#       # Step 5: Terraform Apply
-#       - name: Terraform Apply
-#         working-directory: eks-terraform
-#         run: terraform ${{ env.TF_ACTION }} --auto-approve
-
-
-# # name: EKS Deployment Pipeline - Production
-
-# # on:
-# #   push:
-# #     branches:
-# #       - main  # Automatically triggers on push to the main branch
-
-# # jobs:
-# #   eks-deployment:
-# #     runs-on: ubuntu-latest
-
-# #     environment: production  # Requires manual approval
-
-# #     env:
-# #       TF_ACTION: "apply"  # Apply to production
-
-# #     steps:
-# #       # Step 1: Checkout the repository
-# #       - name: Checkout EKS deployment repo
-# #         uses: actions/checkout@v3
-# #         with:
-# #           repository: awanmbandi/realworld-microservice-project
-# #           ref: main
-
-# #       # Step 2: Terraform Init
-# #       - name: Terraform Init
-# #         working-directory: eks-terraform
-# #         run: terraform init --reconfigure
-
-# #       # Step 3: Terraform Validate
-# #       - name: Terraform Validate
-# #         working-directory: eks-terraform
-# #         run: terraform validate
-
-# #       # Step 4: Terraform Plan
-# #       - name: Terraform Plan
-# #         working-directory: eks-terraform
-# #         run: terraform plan
-
-# #       # Step 5: Terraform Apply
-# #       - name: Terraform Apply
-# #         working-directory: eks-terraform
-# #         run: terraform ${{ env.TF_ACTION }} --auto-approve
