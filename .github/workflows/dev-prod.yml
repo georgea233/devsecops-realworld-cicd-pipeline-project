@@ -10,22 +10,24 @@ jobs:
   eks-deployment:
     runs-on: ubuntu-latest
 
-    # Set environment-specific variables
+    # env:
+    #   AWS_REGION: "us-east-2"  # Set your desired AWS region
+    #   TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'apply' || 'apply' }}  # Apply action for both branches
+    #   TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
+    
     env:
       AWS_REGION: "us-east-2"  # Set your desired AWS region
-      TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'apply' || 'apply' }}  # Apply action for both branches; you can customize this further if needed
-      # TF_ACTION: 'apply'
+      TF_ACTION: ${{ contains(github.event.head_commit.message, 'destroy') && 'destroy' || 'apply' }}  # Change to destroy if the commit message contains 'destroy'
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
 
+
     steps:
-      # Step 1: Checkout the repository
       - name: Checkout EKS deployment repo
         uses: actions/checkout@v3
         with:
-          repository: georgea233/devsecops-realworld-cicd-pipeline-project
+          fetch-depth: 0  # Fetch full history
           ref: ${{ github.ref }}
 
-      # Step 2: Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -33,40 +35,292 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Step 3: Terraform Init
       - name: Terraform Init
         working-directory: eks-terraform
         run: terraform init --reconfigure
 
-      # Step 4: Terraform fmt
       - name: Terraform fmt
         working-directory: eks-terraform
         run: terraform fmt
 
-      # Step 5: Terraform Validate
       - name: Terraform Validate
         working-directory: eks-terraform
         run: terraform validate
 
-      # Step 6: Terraform Plan
       - name: Terraform Plan
         working-directory: eks-terraform
         run: terraform plan -out=tfplan
 
-      # Step 7: Terraform Apply
       - name: Terraform Apply
         working-directory: eks-terraform
         run: terraform apply -auto-approve tfplan
-        if: github.ref == 'refs/heads/dev-sec-ops-cicd-pipeline-project-one'  # Automatically apply for dev branch
+        if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
 
-      # Step 8: Manual Approval for Production
       - name: Manual Approval for Production
         if: github.ref == 'refs/heads/main'  # Only for main branch
         run: echo "Waiting for manual approval to proceed with production deployment..."
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # You can also set up manual approval through GitHub Actions Environment
 
+  eks-destroy:
+    runs-on: ubuntu-latest
+    needs: eks-deployment  # Ensure this runs after deployment
+    env:
+      AWS_REGION: "us-east-2"  # Set your desired AWS region
+      TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Set environment variable for destroy
+
+    steps:
+      - name: Checkout EKS deployment repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Terraform Init
+        working-directory: eks-terraform
+        run: terraform init --reconfigure
+
+      - name: Terraform Validate
+        working-directory: eks-terraform
+        run: terraform validate
+
+      - name: Manual Approval for Destroy
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'  # Allow manual approval on both branches
+        run: echo "Waiting for manual approval to proceed with destruction..."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Terraform Destroy
+        working-directory: eks-terraform
+        run: terraform destroy -auto-approve
+        if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'  # Allow destroy on both branches
+
+
+
+
+# name: EKS Deployment Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - dev  # Dev branch
+#       - main  # Production branch
+#   workflow_dispatch:  # Allows manual trigger for destroy job
+
+# jobs:
+#   eks-deployment:
+#     runs-on: ubuntu-latest
+
+#     env:
+#       AWS_REGION: "us-east-2"
+#       TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'destroy' || 'destroy' }}  # Apply action for both branches
+#       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+
+#     steps:
+#       - name: Checkout EKS deployment repo
+#         uses: actions/checkout@v3
+#         with:
+#           repository: georgea233/devsecops-realworld-cicd-pipeline-project
+#           ref: ${{ github.ref }}
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Terraform Init
+#         working-directory: eks-terraform
+#         run: terraform init --reconfigure
+
+#       - name: Terraform fmt
+#         working-directory: eks-terraform
+#         run: terraform fmt
+
+#       - name: Terraform Validate
+#         working-directory: eks-terraform
+#         run: terraform validate
+
+#       - name: Terraform Plan
+#         working-directory: eks-terraform
+#         run: terraform plan -out=tfplan
+
+#       - name: Terraform Apply
+#         working-directory: eks-terraform
+#         run: terraform apply -auto-approve tfplan
+#         if: github.ref == 'refs/heads/dev'
+
+#       - name: Manual Approval for Production
+#         if: github.ref == 'refs/heads/main'
+#         run: echo "Waiting for manual approval to proceed with production deployment..."
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#   eks-destroy:
+#     runs-on: ubuntu-latest
+#     if: github.event_name == 'workflow_dispatch'  # Only run when manually triggered
+
+#     env:
+#       AWS_REGION: "us-east-2"
+#       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Dynamic environment variable for destroy
+
+#     steps:
+#       - name: Checkout EKS deployment repo
+#         uses: actions/checkout@v3
+#         with:
+#           repository: georgea233/devsecops-realworld-cicd-pipeline-project
+#           ref: main  # Ensure you check out the main or relevant branch
+
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       - name: Terraform Init
+#         working-directory: eks-terraform
+#         run: terraform init --reconfigure
+
+#       - name: Terraform Validate
+#         working-directory: eks-terraform
+#         run: terraform validate
+
+#       - name: Manual Approval for Destroy
+#         run: echo "Waiting for manual approval to proceed with destruction..."
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#       - name: Terraform Destroy
+#         working-directory: eks-terraform
+#         run: terraform destroy -auto-approve
+
+
+
+# name: EKS Deployment Pipeline
+
+# on:
+#   push:
+#     branches:
+#       - dev  # Dev branch
+#       - main  # Production branch
+
+# jobs:
+#   eks-deployment:
+#     runs-on: ubuntu-latest
+
+#     # Set environment-specific variables
+#     env:
+#       AWS_REGION: "us-east-2"  # Set your desired AWS region
+#       # TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'apply' || 'apply' }}  # Apply action for both branches; you can customize this further if needed
+#       TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'destroy' || 'destroy' }}  # Apply action for both branches; you can customize this further if needed
+#       # TF_ACTION: 'apply'
+#       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
+
+#     steps:
+#       # Step 1: Checkout the repository
+#       - name: Checkout EKS deployment repo
+#         uses: actions/checkout@v3
+#         with:
+#           repository: georgea233/devsecops-realworld-cicd-pipeline-project
+#           ref: ${{ github.ref }}
+
+#       # Step 2: Configure AWS credentials
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ env.AWS_REGION }}
+
+#       # Step 3: Terraform Init
+#       - name: Terraform Init
+#         working-directory: eks-terraform
+#         run: terraform init --reconfigure
+
+#       # Step 4: Terraform fmt
+#       - name: Terraform fmt
+#         working-directory: eks-terraform
+#         run: terraform fmt
+
+#       # Step 5: Terraform Validate
+#       - name: Terraform Validate
+#         working-directory: eks-terraform
+#         run: terraform validate
+
+#       # Step 6: Terraform Plan
+#       - name: Terraform Plan
+#         working-directory: eks-terraform
+#         run: terraform plan -out=tfplan
+
+#       # Step 7: Terraform Apply
+#       - name: Terraform Apply
+#         working-directory: eks-terraform
+#         run: terraform apply -auto-approve tfplan
+#         if: github.ref == 'refs/heads/dev'  # Automatically apply for dev branch
+
+#       # Step 8: Manual Approval for Production
+#       - name: Manual Approval for Production
+#         if: github.ref == 'refs/heads/main'  # Only for main branch
+#         run: echo "Waiting for manual approval to proceed with production deployment..."
+#         env:
+#           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#         # You can also set up manual approval through GitHub Actions Environment
+
+#   eks-destroy:
+#       runs-on: ubuntu-latest
+#       needs: eks-deployment  # Ensure this runs after deployment
+#       environment: destroy  # Specify the environment to require approval
+
+#       env:
+#         AWS_REGION: "us-east-1"  # Set your desired AWS region
+#         TF_VAR_environment: 'production'  # Change as needed
+
+#       steps:
+#         # Step 1: Checkout the repository
+#         - name: Checkout EKS deployment repo
+#           uses: actions/checkout@v3
+#           with:
+#             repository: georgea233/devsecops-realworld-cicd-pipeline-project
+#             ref: main  # Ensure you check out the main or relevant branch
+
+#         # Step 2: Configure AWS credentials
+#         - name: Configure AWS credentials
+#           uses: aws-actions/configure-aws-credentials@v1
+#           with:
+#             aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#             aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#             aws-region: ${{ env.AWS_REGION }}
+
+#         # Step 3: Terraform Init
+#         - name: Terraform Init
+#           working-directory: eks-terraform
+#           run: terraform init --reconfigure
+
+#         # Step 4: Terraform Validate
+#         - name: Terraform Validate
+#           working-directory: eks-terraform
+#           run: terraform validate
+
+#         # Step 5: Manual Approval for Destroy (for Production)
+#         - name: Manual Approval for Destroy
+#           if: github.ref == 'refs/heads/main'  # Only for main branch
+#           run: echo "Waiting for manual approval to proceed with destruction..."
+#           env:
+#             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#         # Step 6: Terraform Destroy
+#         - name: Terraform Destroy
+#           working-directory: eks-terraform
+#           run: terraform destroy -auto-approve        
 
 
 # name: EKS Deployment Pipeline - Dev
