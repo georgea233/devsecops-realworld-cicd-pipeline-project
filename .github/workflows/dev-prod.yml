@@ -15,7 +15,7 @@ jobs:
       AWS_REGION: "us-east-2"  # Set your desired AWS region
       TF_ACTION: ${{ contains(github.event.head_commit.message, 'destroy') && 'destroy' || 'apply' }}  # Action based on commit message
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
-
+##
     steps:
       - name: Checkout EKS deployment repo
         uses: actions/checkout@v3
