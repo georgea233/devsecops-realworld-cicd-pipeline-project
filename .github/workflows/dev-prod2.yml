@@ -39,7 +39,7 @@ jobs:
       - name: Apply Infrastructure
         run: terraform apply -auto-approve tfplan
         working-directory: ./infra-terraform
-
+##$55
   # Third job: Destroys both infrastructure and EKS if triggered
   destroy:
     runs-on: ubuntu-latest
