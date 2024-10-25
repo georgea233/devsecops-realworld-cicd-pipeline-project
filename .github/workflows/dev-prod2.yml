@@ -12,6 +12,7 @@ jobs:
   # First job: Creates the infrastructure
   terraform-infra:
     runs-on: ubuntu-latest
+    if: "!contains(github.event.head_commit.message, 'destroy')"  # Prevent this job from running if 'destroy' is in the commit message
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -39,11 +40,11 @@ jobs:
       - name: Apply Infrastructure
         run: terraform apply -auto-approve tfplan
         working-directory: ./infra-terraform
-##$55
-  # Third job: Destroys both infrastructure and EKS if triggered
+
+  # Second job: Destroys both infrastructure and EKS if triggered
   destroy:
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'destroy')  # Trigger if 'destroy' is in the commit message or if manually triggered
+    if: contains(github.event.head_commit.message, 'destroy') || github.event_name == 'workflow_dispatch'  # Run this job if 'destroy' is in the commit message or manually triggered
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
