@@ -3,9 +3,9 @@ name: Infrastructure and EKS Deployment
 on:
   push:
     branches:
-      - main
-      - dev
-      - '*'   # Capture all branches for testing (optional)
+      # - main
+      # - dev
+      # - '*'   # Capture all branches for testing (optional)
   workflow_dispatch:
 
 jobs:

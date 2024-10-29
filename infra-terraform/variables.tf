@@ -4,11 +4,11 @@ variable "aws_region" {
   default     = "us-east-2"
 }
 
-# variable "profile" {
-#   description = "The AWS profile to use"
-#   type        = string
-#   default     = "george"
-# }
+variable "profile" {
+  description = "The AWS profile to use"
+  type        = string
+  default     = "george"
+}
 
 ##$wrere
 
