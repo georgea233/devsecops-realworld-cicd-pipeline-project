@@ -187,23 +187,23 @@ resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
 # EKS Cluster Provisioning
 # ---------------------------
 
-# resource "aws_eks_cluster" "example" {
-#   name     = "EKS_Cluster"
-#   role_arn = aws_iam_role.eks_cluster.arn
+resource "aws_eks_cluster" "example" {
+  name     = "EKS_Cluster"
+  role_arn = aws_iam_role.eks_cluster.arn
 
-#   vpc_config {
-#     subnet_ids = [element(data.aws_subnets.public_subnets.ids, 0)]
+  vpc_config {
+    subnet_ids = [element(data.aws_subnets.public_subnets.ids, 0)]
 
-#     endpoint_private_access = false
-#     endpoint_public_access  = true
+    endpoint_private_access = false
+    endpoint_public_access  = true
 
-#     security_group_ids = [aws_security_group.jenkins_ci_sg.id]
-#   }
+    security_group_ids = [aws_security_group.jenkins_ci_sg.id]
+  }
 
-#   depends_on = [
-#     aws_iam_role_policy_attachment.eks_cluster_policy,
-#   ]
-# }
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_cluster_policy,
+  ]
+}
 
 # ---------------------------
 # IAM Role for EKS Node Group
@@ -244,26 +244,26 @@ resource "aws_iam_role_policy_attachment" "ecs_registry_read_only" {
 # Create EKS Node Group
 # ---------------------------
 
-# resource "aws_eks_node_group" "example" {
-#   cluster_name    = aws_eks_cluster.example.name
-#   node_group_name = "Node-Cluster"
-#   node_role_arn   = aws_iam_role.eks_node_group.arn
-#   subnet_ids      = [element(data.aws_subnets.public_subnets.ids, 0)]
+resource "aws_eks_node_group" "example" {
+  cluster_name    = aws_eks_cluster.example.name
+  node_group_name = "Node-Cluster"
+  node_role_arn   = aws_iam_role.eks_node_group.arn
+  subnet_ids      = [element(data.aws_subnets.public_subnets.ids, 0)]
 
-#   scaling_config {
-#     desired_size = 2
-#     max_size     = 2
-#     min_size     = 1
-#   }
+  scaling_config {
+    desired_size = 2
+    max_size     = 2
+    min_size     = 1
+  }
 
-#   instance_types = ["t2.xlarge"]
+  instance_types = ["t2.xlarge"]
 
-#   depends_on = [
-#     aws_iam_role_policy_attachment.eks_worker_node_policy_ng,
-#     aws_iam_role_policy_attachment.eks_cni_policy_ng,
-#     aws_iam_role_policy_attachment.ecs_registry_read_only,
-#   ]
-# }
+  depends_on = [
+    aws_iam_role_policy_attachment.eks_worker_node_policy_ng,
+    aws_iam_role_policy_attachment.eks_cni_policy_ng,
+    aws_iam_role_policy_attachment.ecs_registry_read_only,
+  ]
+}
 
 
 
