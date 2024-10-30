@@ -23,6 +23,7 @@ resource "aws_iam_role" "jenkins_ci" {
   })
 }
 
+##er4
 # Attach AdministratorAccess policy to Jenkins CI role
 resource "aws_iam_role_policy_attachment" "jenkins_admin_access" {
   role       = aws_iam_role.jenkins_ci.name
