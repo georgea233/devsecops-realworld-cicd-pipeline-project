@@ -1,6 +1,7 @@
 # ---------------------------
 # IAM Roles and Policies
-# ---------------------------
+# # ---------------------------
+
 
 # IAM Role for Jenkins CI
 resource "aws_iam_role" "jenkins_ci" {
@@ -13,12 +14,33 @@ resource "aws_iam_role" "jenkins_ci" {
         Action = "sts:AssumeRole"
         Effect = "Allow"
         Principal = {
-          Service = "ec2.amazonaws.com" # Adjust if necessary for different deployment
+          Service = [
+            "ec2.amazonaws.com",
+            "eks.amazonaws.com"
+          ]
         }
       }
     ]
   })
 }
+
+# # IAM Role for Jenkins CI
+# resource "aws_iam_role" "jenkins_ci" {
+#   name = var.iam_role_name
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Action = "sts:AssumeRole"
+#         Effect = "Allow"
+#         Principal = {
+#           Service = "ec2.amazonaws.com" # Adjust if necessary for different deployment
+#         }
+#       }
+#     ]
+#   })
+# }
 
 # Attach AdministratorAccess policy to Jenkins CI role
 resource "aws_iam_role_policy_attachment" "jenkins_admin_access" {
