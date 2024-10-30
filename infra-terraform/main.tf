@@ -316,6 +316,8 @@ resource "aws_eks_node_group" "example" {
 #   name        = "${var.iam_role_name}-eks-policy"
 #   description = "Custom policy for Jenkins to access EKS resources"
 
+##45
+
 #   policy = jsonencode({
 #     Version = "2012-10-17",
 #     Statement = [
