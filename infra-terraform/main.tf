@@ -192,7 +192,8 @@ resource "aws_eks_cluster" "example" {
   role_arn = aws_iam_role.eks_cluster.arn
 
   vpc_config {
-    subnet_ids = [element(data.aws_subnets.public_subnets.ids, 0,1)]
+    # subnet_ids = [element(data.aws_subnets.public_subnets.ids, 0)]
+    subnet_ids = slice(data.aws_subnets.public_subnets.ids, 0, 2)
 
     endpoint_private_access = false
     endpoint_public_access  = true
