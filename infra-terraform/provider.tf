@@ -12,10 +12,22 @@ provider "aws" {
   # profile = var.profile
 }
 
+# Fetching the EKS Cluster Authentication Token
+data "aws_eks_cluster_auth" "example" {
+  name = aws_eks_cluster.example.name
 
-provider "kubernetes" {
-  host                   = data.aws_eks_cluster.example.endpoint
-  cluster_ca_certificate = base64decode(data.aws_eks_cluster.example.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster.example.token
+  # Optional: explicitly set dependencies to ensure EKS cluster is created first
+  depends_on = [aws_eks_cluster.example]
 }
+
+# Kubernetes Provider configuration (depends on EKS cluster creation)
+provider "kubernetes" {
+  host                   = aws_eks_cluster.example.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.example.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.example.token
+}
+
+# ---------------------------
+# Data Source to fetch EKS Cluster Authentication Token
+# ---------------------------
 
