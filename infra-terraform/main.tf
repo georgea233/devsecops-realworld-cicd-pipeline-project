@@ -285,6 +285,7 @@ resource "kubernetes_config_map" "aws_auth" {
       }
     ])
   }
+}
 
 # ---------------------------
 # Kubernetes Provider Configuration
