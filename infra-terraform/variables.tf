@@ -4,13 +4,17 @@ variable "aws_region" {
   default     = "us-east-2"
 }
 
-# variable "profile" {
-#   description = "The AWS profile to use"
-#   type        = string
-#   default     = "george"
-# }
+variable "profile" {
+  description = "The AWS profile to use"
+  type        = string
+  default     = "Fluent-In-DevOps"
+}
 
-##$wrere
+# variable "role_arn" { 
+#   description = "The ARN of the role to use"
+#   type        = string
+#   default     = "arn:aws:iam::123456789012:role/MyEKSNodeInstanceRole"
+# }
 
 ## IAM role for Jenkins CI
 variable "iam_role_name" {
@@ -91,4 +95,8 @@ variable "ingress_rules" {
       cidr_blocks = ["0.0.0.0/0"]
     }
   ]
+}
+
+output "cluster_role_arn" {
+  value = aws_iam_role.eks_cluster.arn
 }

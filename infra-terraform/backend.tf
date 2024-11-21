@@ -1,11 +1,11 @@
 terraform {
   backend "s3" {
-    bucket = "ec2-builder-remote-state"
-    key    = "ec2-image-builder/state.tfstate"
+    bucket = "fluentindevops-remote-state" #fluent-in-devops account
+    key    = "fluentindevops/state.tfstate"
     region = "us-east-2"
 
     # Replace this with your DynamoDB table name!
-    dynamodb_table = "anslem-terraform-tf-state-lock"
+    dynamodb_table = "devops-terraform-tf-state-lock" #fluent-in-devops account
   }
 }
- 
+
