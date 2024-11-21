@@ -260,22 +260,22 @@ resource "aws_eks_node_group" "example" {
 }
 
 
-# # Configure aws-auth ConfigMap for EKS to allow Jenkins role access
-# resource "kubernetes_config_map" "aws_auth" {
-#   metadata {
-#     name      = "aws-auth"
-#     namespace = "kube-system"
-#   }
+# Configure aws-auth ConfigMap for EKS to allow Jenkins role access
+resource "kubernetes_config_map" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
 
-#   data = {
-#     mapRoles = jsonencode([
-#       {
-#         rolearn  = aws_iam_role.jenkins_ci.arn
-#         username = "jenkins-role"
-#         groups   = ["system:masters"]
-#       }
-#     ])
-#   }
+  data = {
+    mapRoles = jsonencode([
+      {
+        rolearn  = aws_iam_role.jenkins_ci.arn
+        username = "jenkins-server" #change to preferred username
+        groups   = ["system:masters"]
+      }
+    ])
+  }
 
-#   depends_on = [aws_eks_cluster.example]
-# }
+  depends_on = [aws_eks_cluster.example]
+}
