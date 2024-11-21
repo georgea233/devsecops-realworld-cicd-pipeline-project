@@ -269,7 +269,7 @@ data "aws_eks_cluster" "example" {
 
 #2. Configure aws-auth configmap for eks to allow jenkins access
 resource "kubernetes_config_map" "aws_auth" {
-  depends_on = [aws_eks_cluster.example]
+  depends_on = [aws_eks_cluster.example, aws_eks_node_group.example]
 
   metadata {
     name      = "aws-auth"
@@ -280,37 +280,22 @@ resource "kubernetes_config_map" "aws_auth" {
     mapRoles = jsonencode([
       {
         rolearn  = aws_iam_role.jenkins_ci.arn
-        username = "jenkins"
+        username = "jenkins" #change to preferred username
         groups   = ["system:masters"]
       }
     ])
   }
 
-  # Ensure the EKS cluster is active before creating the aws-auth config map
-  lifecycle {
-    ignore_changes = [
-      data
-    ]
-  }
-}
+# ---------------------------
+# Kubernetes Provider Configuration
+# ---------------------------
 
-
-
-# resource "kubernetes_config_map" "aws_auth" {
-#   metadata {
-#     name      = "aws-auth"
-#     namespace = "kube-system"
+# Use kubectl and Kubernetes resources
+#   # Ensure the EKS cluster is active before creating the aws-auth config map
+#   lifecycle {
+#     ignore_changes = [
+#       data
+#     ]
 #   }
-
-#   data = {
-#     mapRoles = jsonencode([
-#       {
-#         rolearn  = aws_iam_role.jenkins_ci.arn
-#         username = "jenkins-server" #change to preferred username
-#         groups   = ["system:masters"]
-#       }
-#     ])
-#   }
-
-#   depends_on = [aws_eks_cluster.example]
 # }
+
