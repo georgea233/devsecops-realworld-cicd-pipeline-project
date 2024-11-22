@@ -321,8 +321,18 @@ resource "null_resource" "backup_aws_auth" {
   depends_on = [aws_eks_cluster.example, aws_eks_node_group.example]
 }
 
+resource "null_resource" "wait_for_eks_cluster" {
+  depends_on = [
+    aws_eks_cluster.example,
+    aws_eks_node_group.example,
+  ]
+}
+
 resource "kubernetes_manifest" "aws_auth_patch" {
   provider = kubernetes
+
+  depends_on = [null_resource.wait_for_eks_cluster]
+  
   manifest = {
     "apiVersion" = "v1"
     "kind"       = "ConfigMap"
