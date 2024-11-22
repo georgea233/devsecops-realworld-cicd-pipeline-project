@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -48,13 +48,13 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
-      - name: Set up kubectl and aws cli
+      - name: Set up kubectl and AWS CLI
         run: |
           # Install AWS CLI and kubectl (if not already installed)
           curl -sS https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o "awscliv2.zip"
@@ -64,10 +64,6 @@ jobs:
           chmod +x ./kubectl
           sudo mv ./kubectl /usr/local/bin/kubectl
           
-      # - name: Update kubeconfig for EKS cluster
-      #   run: |
-      #     aws eks --region us-east-2 update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }}
-
       - name: Update kubeconfig for EKS cluster
         env:
           EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
@@ -79,25 +75,10 @@ jobs:
           kubectl get configmap -n kube-system aws-auth -o yaml > aws-auth-backup.yaml
 
       - name: Upload Backup as an artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: aws-auth-backup
-          path: aws-auth-backup.yaml      
-
-
-      # # Add kubectl installation and EKS kubeconfig update here
-      # - name: Install kubectl
-      #   run: |
-      #     curl -LO "https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl"
-      #     chmod +x ./kubectl
-      #     sudo mv ./kubectl /usr/local/bin/kubectl
-
-      # - name: Update kubeconfig for EKS cluster
-      #   run: |
-      #     aws eks --region us-east-2 update-kubeconfig --name EKS_Cluster
-
-      # Now, you can safely interact with EKS using kubectl and terraform
-      # Add the aws-auth update and backup logic here if needed, similar to your Terraform code
+          path: aws-auth-backup.yaml
 
   # Second job: Destroys both infrastructure and EKS if triggered
   destroy:
@@ -108,7 +89,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -126,8 +107,6 @@ jobs:
       - name: Terraform Destroy for Infrastructure
         run: terraform destroy -auto-approve
         working-directory: ./infra-terraform
-
-
 
 
 
@@ -174,6 +153,64 @@ jobs:
 #         run: terraform apply -auto-approve tfplan
 #         working-directory: ./infra-terraform
 
+#   backup-aws-auth:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-2
+
+#       - name: Set up kubectl and aws cli
+#         run: |
+#           # Install AWS CLI and kubectl (if not already installed)
+#           curl -sS https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o "awscliv2.zip"
+#           unzip awscliv2.zip
+#           sudo ./aws/install
+#           curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/amd64/kubectl"
+#           chmod +x ./kubectl
+#           sudo mv ./kubectl /usr/local/bin/kubectl
+          
+#       # - name: Update kubeconfig for EKS cluster
+#       #   run: |
+#       #     aws eks --region us-east-2 update-kubeconfig --name ${{ secrets.EKS_CLUSTER_NAME }}
+
+#       - name: Update kubeconfig for EKS cluster
+#         env:
+#           EKS_CLUSTER_NAME: ${{ secrets.EKS_CLUSTER_NAME }}
+#         run: |
+#           aws eks --region us-east-2 update-kubeconfig --name $EKS_CLUSTER_NAME --kubeconfig ~/.kube/config
+
+#       - name: Backup aws-auth ConfigMap
+#         run: |
+#           kubectl get configmap -n kube-system aws-auth -o yaml > aws-auth-backup.yaml
+
+#       - name: Upload Backup as an artifact
+#         uses: actions/upload-artifact@v2
+#         with:
+#           name: aws-auth-backup
+#           path: aws-auth-backup.yaml      
+
+
+#       # # Add kubectl installation and EKS kubeconfig update here
+#       # - name: Install kubectl
+#       #   run: |
+#       #     curl -LO "https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl"
+#       #     chmod +x ./kubectl
+#       #     sudo mv ./kubectl /usr/local/bin/kubectl
+
+#       # - name: Update kubeconfig for EKS cluster
+#       #   run: |
+#       #     aws eks --region us-east-2 update-kubeconfig --name EKS_Cluster
+
+#       # Now, you can safely interact with EKS using kubectl and terraform
+#       # Add the aws-auth update and backup logic here if needed, similar to your Terraform code
+
 #   # Second job: Destroys both infrastructure and EKS if triggered
 #   destroy:
 #     runs-on: ubuntu-latest
@@ -201,3 +238,78 @@ jobs:
 #       - name: Terraform Destroy for Infrastructure
 #         run: terraform destroy -auto-approve
 #         working-directory: ./infra-terraform
+
+
+
+
+
+# # name: Infrastructure and EKS Deployment
+
+# # on:
+# #   push:
+# #     branches:
+# #       # - main
+# #       # - dev
+# #       # - '*'   # Capture all branches for testing (optional)
+# #   workflow_dispatch:
+
+# # jobs:
+# #   # First job: Creates the infrastructure
+# #   terraform-infra:
+# #     runs-on: ubuntu-latest
+# #     if: "!contains(github.event.head_commit.message, 'destroy')"  # Prevent this job from running if 'destroy' is in the commit message
+# #     steps:
+# #       - name: Checkout code
+# #         uses: actions/checkout@v2
+
+# #       - name: Configure AWS Credentials
+# #         uses: aws-actions/configure-aws-credentials@v1
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# #           aws-region: us-east-2
+
+# #       - name: Set up Terraform
+# #         uses: hashicorp/setup-terraform@v1.4.0
+# #         with:
+# #           terraform_version: 1.6.0
+
+# #       - name: Terraform Init for Infrastructure
+# #         run: terraform init
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Plan for Infrastructure
+# #         run: terraform plan -out=tfplan
+# #         working-directory: ./infra-terraform
+
+# #       - name: Apply Infrastructure
+# #         run: terraform apply -auto-approve tfplan
+# #         working-directory: ./infra-terraform
+
+# #   # Second job: Destroys both infrastructure and EKS if triggered
+# #   destroy:
+# #     runs-on: ubuntu-latest
+# #     if: contains(github.event.head_commit.message, 'destroy') || github.event_name == 'workflow_dispatch'  # Run this job if 'destroy' is in the commit message or manually triggered
+# #     steps:
+# #       - name: Checkout code
+# #         uses: actions/checkout@v2
+
+# #       - name: Configure AWS Credentials
+# #         uses: aws-actions/configure-aws-credentials@v1
+# #         with:
+# #           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+# #           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+# #           aws-region: us-east-2
+
+# #       - name: Set up Terraform
+# #         uses: hashicorp/setup-terraform@v1.4.0
+# #         with:
+# #           terraform_version: 1.6.0
+
+# #       - name: Terraform Init for Infrastructure
+# #         run: terraform init
+# #         working-directory: ./infra-terraform
+
+# #       - name: Terraform Destroy for Infrastructure
+# #         run: terraform destroy -auto-approve
+# #         working-directory: ./infra-terraform
