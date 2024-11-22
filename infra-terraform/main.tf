@@ -272,31 +272,31 @@ resource "aws_eks_node_group" "example" {
 #   name = aws_eks_cluster.example.name
 # }
 
-# Fetch the current aws-auth ConfigMap
-data "kubernetes_config_map" "aws_auth" {
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
-  }
+# # Fetch the current aws-auth ConfigMap
+# data "kubernetes_config_map" "aws_auth" {
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
+#   }
 
-  depends_on = [aws_eks_node_group.example]
-}
+#   depends_on = [aws_eks_node_group.example]
+# }
 
-# Define New role to be added
-locals {
-  new_role = <<EOT
-    - rolearn: ${aws_iam_role.jenkins_ci.arn}
-      username: jenkins
-      groups:
-        - system:masters
-EOT
+# # Define New role to be added
+# locals {
+#   new_role = <<EOT
+#     - rolearn: ${aws_iam_role.jenkins_ci.arn}
+#       username: jenkins
+#       groups:
+#         - system:masters
+# EOT
 
-  # Merge the existing roles with the new role
-  updated_map_roles = <<EOT
-${data.kubernetes_config_map.aws_auth.data["mapRoles"]}
-${local.new_role}
-EOT
-}
+#   # Merge the existing roles with the new role
+#   updated_map_roles = <<EOT
+# ${data.kubernetes_config_map.aws_auth.data["mapRoles"]}
+# ${local.new_role}
+# EOT
+# }
 
 # # Update the aws-auth ConfigMap
 # resource "kubernetes_config_map" "aws_auth" {
