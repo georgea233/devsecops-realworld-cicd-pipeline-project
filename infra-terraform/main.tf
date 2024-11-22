@@ -328,22 +328,24 @@ resource "null_resource" "wait_for_eks_cluster" {
   ]
 }
 
-resource "kubernetes_manifest" "aws_auth_patch" {
-  provider = kubernetes
+# resource "kubernetes_manifest" "aws_auth_patch" {
+#   provider = kubernetes
 
-  #depends_on = [null_resource.wait_for_eks_cluster]
+#   #depends_on = [null_resource.wait_for_eks_cluster]
   
-  manifest = {
-    "apiVersion" = "v1"
-    "kind"       = "ConfigMap"
-    "metadata" = {
-      "name"      = "aws-auth"
-      "namespace" = "kube-system"
-    }
-    "data" = {
-      "mapRoles" = "${data.kubernetes_config_map.aws_auth.data["mapRoles"]}${local.new_role}"
-    }
-  }
+#   manifest = {
+#     "apiVersion" = "v1"
+#     "kind"       = "ConfigMap"
+#     "metadata" = {
+#       "name"      = "aws-auth"
+#       "namespace" = "kube-system"
+#     }
+#     "data" = {
+#       "mapRoles" = "${data.kubernetes_config_map.aws_auth.data["mapRoles"]}${local.new_role}"
+#     }
+#   }
+
+#rtrtgre
 
 #   # Ensure this update runs only after the backup and cluster/nodegroup are ready
 #   depends_on = [
