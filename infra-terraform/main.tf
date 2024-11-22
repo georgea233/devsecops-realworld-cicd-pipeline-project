@@ -262,15 +262,15 @@ resource "aws_eks_node_group" "example" {
 ##dww
 # Configure aws-auth ConfigMap for EKS to allow Jenkins role access
 
-# Fetch the EKS cluster details
-data "aws_eks_cluster" "example" {
-  name = aws_eks_cluster.example.name
-}
+# # Fetch the EKS cluster details
+# data "aws_eks_cluster" "example" {
+#   name = aws_eks_cluster.example.name
+# }
 
-# Fetch authentication token for the cluster
-data "aws_eks_cluster_auth" "example" {
-  name = aws_eks_cluster.example.name
-}
+# # Fetch authentication token for the cluster
+# data "aws_eks_cluster_auth" "example" {
+#   name = aws_eks_cluster.example.name
+# }
 
 # Fetch the current aws-auth ConfigMap
 data "kubernetes_config_map" "aws_auth" {
