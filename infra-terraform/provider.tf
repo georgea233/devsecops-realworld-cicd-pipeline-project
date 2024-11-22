@@ -12,19 +12,19 @@ provider "aws" {
   # profile = var.profile
 }
 
-data "aws_eks_cluster" "example" {
-  name = aws_eks_cluster.example.name
+# data "aws_eks_cluster" "example" {
+#   name = aws_eks_cluster.example.name
 
-  # Optional: explicitly set dependencies to ensure EKS cluster is created first
-  depends_on = [aws_eks_cluster.example]
-}
+#   # Optional: explicitly set dependencies to ensure EKS cluster is created first
+#   depends_on = [aws_eks_cluster.example]
+# }
 
-data "aws_eks_cluster_auth" "example" {
-  name = data.aws_eks_cluster.example.id # could laso have used name instead of id
+# data "aws_eks_cluster_auth" "example" {
+#   name = data.aws_eks_cluster.example.id # could laso have used name instead of id
 
-  # Optional: explicitly set dependencies to ensure EKS cluster is created first
-  depends_on = [aws_eks_cluster.example]
-}
+#   # Optional: explicitly set dependencies to ensure EKS cluster is created first
+#   depends_on = [aws_eks_cluster.example]
+# }
 
 #rtee
 # # Fetching the EKS Cluster Authentication Token
