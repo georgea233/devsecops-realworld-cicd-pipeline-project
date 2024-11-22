@@ -259,7 +259,7 @@ resource "aws_eks_node_group" "example" {
   ]
 }
 
-
+##dww
 # Configure aws-auth ConfigMap for EKS to allow Jenkins role access
 
 # Fetch the EKS cluster details
