@@ -348,6 +348,7 @@ provider "kubernetes" {
   token                  = data.aws_eks_cluster_auth.example.token
 }
 
+
 # #1. In this case, the data source checks the current state of the EKS cluster and allows you to perform actions based on the cluster's availability:
 # data "aws_eks_cluster" "example" {
 #   name = aws_eks_cluster.example.name
