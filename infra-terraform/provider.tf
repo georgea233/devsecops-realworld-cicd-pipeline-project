@@ -12,6 +12,14 @@ provider "aws" {
   # profile = var.profile
 }
 
+data "aws_eks_cluster" "cluster" {
+  name = "your-eks-cluster-name"
+}
+
+data "aws_eks_cluster_auth" "cluster" {
+  name = data.aws_eks_cluster.cluster.name
+}
+
 #rtee
 # # Fetching the EKS Cluster Authentication Token
 # data "aws_eks_cluster_auth" "example" {
