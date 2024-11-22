@@ -322,6 +322,7 @@ resource "null_resource" "backup_aws_auth" {
 }
 
 resource "kubernetes_manifest" "aws_auth_patch" {
+  provider = kubernetes
   manifest = {
     "apiVersion" = "v1"
     "kind"       = "ConfigMap"
