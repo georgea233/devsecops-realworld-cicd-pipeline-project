@@ -41,6 +41,20 @@ jobs:
         run: terraform apply -auto-approve tfplan
         working-directory: ./infra-terraform
 
+      # Add kubectl installation and EKS kubeconfig update here
+      - name: Install kubectl
+        run: |
+          curl -LO "https://dl.k8s.io/release/v1.27.0/bin/linux/amd64/kubectl"
+          chmod +x ./kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl
+
+      - name: Update kubeconfig for EKS cluster
+        run: |
+          aws eks --region us-east-2 update-kubeconfig --name EKS_Cluster
+
+      # Now, you can safely interact with EKS using kubectl and terraform
+      # Add the aws-auth update and backup logic here if needed, similar to your Terraform code
+
   # Second job: Destroys both infrastructure and EKS if triggered
   destroy:
     runs-on: ubuntu-latest
@@ -68,3 +82,78 @@ jobs:
       - name: Terraform Destroy for Infrastructure
         run: terraform destroy -auto-approve
         working-directory: ./infra-terraform
+
+
+
+
+
+# name: Infrastructure and EKS Deployment
+
+# on:
+#   push:
+#     branches:
+#       # - main
+#       # - dev
+#       # - '*'   # Capture all branches for testing (optional)
+#   workflow_dispatch:
+
+# jobs:
+#   # First job: Creates the infrastructure
+#   terraform-infra:
+#     runs-on: ubuntu-latest
+#     if: "!contains(github.event.head_commit.message, 'destroy')"  # Prevent this job from running if 'destroy' is in the commit message
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-2
+
+#       - name: Set up Terraform
+#         uses: hashicorp/setup-terraform@v1.4.0
+#         with:
+#           terraform_version: 1.6.0
+
+#       - name: Terraform Init for Infrastructure
+#         run: terraform init
+#         working-directory: ./infra-terraform
+
+#       - name: Terraform Plan for Infrastructure
+#         run: terraform plan -out=tfplan
+#         working-directory: ./infra-terraform
+
+#       - name: Apply Infrastructure
+#         run: terraform apply -auto-approve tfplan
+#         working-directory: ./infra-terraform
+
+#   # Second job: Destroys both infrastructure and EKS if triggered
+#   destroy:
+#     runs-on: ubuntu-latest
+#     if: contains(github.event.head_commit.message, 'destroy') || github.event_name == 'workflow_dispatch'  # Run this job if 'destroy' is in the commit message or manually triggered
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
+
+#       - name: Configure AWS Credentials
+#         uses: aws-actions/configure-aws-credentials@v1
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: us-east-2
+
+#       - name: Set up Terraform
+#         uses: hashicorp/setup-terraform@v1.4.0
+#         with:
+#           terraform_version: 1.6.0
+
+#       - name: Terraform Init for Infrastructure
+#         run: terraform init
+#         working-directory: ./infra-terraform
+
+#       - name: Terraform Destroy for Infrastructure
+#         run: terraform destroy -auto-approve
+#         working-directory: ./infra-terraform

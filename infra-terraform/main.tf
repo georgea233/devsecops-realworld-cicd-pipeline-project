@@ -298,18 +298,48 @@ ${local.new_role}
 EOT
 }
 
-# Update the aws-auth ConfigMap
-resource "kubernetes_config_map" "aws_auth" {
-  metadata {
-    name      = "aws-auth"
-    namespace = "kube-system"
+# # Update the aws-auth ConfigMap
+# resource "kubernetes_config_map" "aws_auth" {
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
+#   }
+
+#   data = {
+#     mapRoles = local.updated_map_roles
+#   }
+
+# depends_on = [ aws_eks_cluster.example, aws_eks_node_group.example, data.kubernetes_config_map.aws_auth ]
+# }
+resource "null_resource" "backup_aws_auth" {
+  provisioner "local-exec" {
+    command = <<EOT
+      kubectl get configmap -n kube-system aws-auth -o yaml > aws-auth-backup.yaml
+    EOT
   }
 
-  data = {
-    mapRoles = local.updated_map_roles
+  depends_on = [aws_eks_cluster.example, aws_eks_node_group.example]
+}
+
+resource "kubernetes_manifest" "aws_auth_patch" {
+  manifest = {
+    "apiVersion" = "v1"
+    "kind"       = "ConfigMap"
+    "metadata" = {
+      "name"      = "aws-auth"
+      "namespace" = "kube-system"
+    }
+    "data" = {
+      "mapRoles" = "${data.kubernetes_config_map.aws_auth.data["mapRoles"]}${local.new_role}"
+    }
   }
 
-depends_on = [ aws_eks_cluster.example, aws_eks_node_group.example, data.kubernetes_config_map.aws_auth ]
+  # Ensure this update runs only after the backup and cluster/nodegroup are ready
+  depends_on = [
+    null_resource.backup_aws_auth, 
+    aws_eks_cluster.example, 
+    aws_eks_node_group.example
+  ]
 }
 
 provider "kubernetes" {
