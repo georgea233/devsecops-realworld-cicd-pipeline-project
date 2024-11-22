@@ -262,41 +262,133 @@ resource "aws_eks_node_group" "example" {
 
 # Configure aws-auth ConfigMap for EKS to allow Jenkins role access
 
-#1. In this case, the data source checks the current state of the EKS cluster and allows you to perform actions based on the cluster's availability:
+# Fetch the EKS cluster details
 data "aws_eks_cluster" "example" {
   name = aws_eks_cluster.example.name
 }
 
-#2. Configure aws-auth configmap for eks to allow jenkins access
-resource "kubernetes_config_map" "aws_auth" {
-  depends_on = [aws_eks_cluster.example, aws_eks_node_group.example]
+# Fetch authentication token for the cluster
+data "aws_eks_cluster_auth" "example" {
+  name = aws_eks_cluster.example.name
+}
 
+# Fetch the current aws-auth ConfigMap
+data "kubernetes_config_map" "aws_auth" {
+  metadata {
+    name      = "aws-auth"
+    namespace = "kube-system"
+  }
+
+  depends_on = [aws_eks_node_group.example]
+}
+
+# Define New role to be added
+locals {
+  new_role = <<EOT
+    - rolearn: ${aws_iam_role.jenkins_ci.arn}
+      username: jenkins
+      groups:
+        - system:masters
+EOT
+
+  # Merge the existing roles with the new role
+  updated_map_roles = <<EOT
+${data.kubernetes_config_map.aws_auth.data["mapRoles"]}
+${local.new_role}
+EOT
+}
+
+# Update the aws-auth ConfigMap
+resource "kubernetes_config_map" "aws_auth" {
   metadata {
     name      = "aws-auth"
     namespace = "kube-system"
   }
 
   data = {
-    mapRoles = jsonencode([
-      {
-        rolearn  = aws_iam_role.jenkins_ci.arn
-        username = "jenkins" #change to preferred username
-        groups   = ["system:masters"]
-      }
-    ])
+    mapRoles = local.updated_map_roles
   }
+
+depends_on = [ aws_eks_cluster.example, aws_eks_node_group.example, data.kubernetes_config_map.aws_auth ]
 }
 
-# ---------------------------
-# Kubernetes Provider Configuration
-# ---------------------------
+provider "kubernetes" {
+  host                   = aws_eks_cluster.example.endpoint
+  cluster_ca_certificate = base64decode(aws_eks_cluster.example.certificate_authority[0].data)
+  token                  = data.aws_eks_cluster_auth.example.token
+}
 
-# Use kubectl and Kubernetes resources
-#   # Ensure the EKS cluster is active before creating the aws-auth config map
-#   lifecycle {
-#     ignore_changes = [
-#       data
-#     ]
+# #1. In this case, the data source checks the current state of the EKS cluster and allows you to perform actions based on the cluster's availability:
+# data "aws_eks_cluster" "example" {
+#   name = aws_eks_cluster.example.name
+# }
+
+# data "kubernetes_config_map" "aws_auth" {
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
 #   }
 # }
+
+
+# locals {
+#   new_role = <<EOT
+#     - rolearn: ${aws_iam_role.jenkins_ci.arn}
+#       username: jenkins
+#       groups:
+#         - system:masters
+# EOT
+# }
+
+# locals {
+#   updated_map_roles = "${data.kubernetes_config_map.aws_auth.data["mapRoles"]}${local.new_role}"
+# }
+
+# resource "kubernetes_config_map" "aws_auth" {
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
+#   }
+
+#   data = {
+#     mapRoles = local.updated_map_roles
+#   }
+# }
+
+
+
+
+
+# #2. Configure aws-auth configmap for eks to allow jenkins access
+# resource "kubernetes_config_map" "aws_auth" {
+#   depends_on = [aws_eks_cluster.example, aws_eks_node_group.example]
+
+#   metadata {
+#     name      = "aws-auth"
+#     namespace = "kube-system"
+#   }
+
+#   data = {
+#     mapRoles = jsonencode([
+#       {
+#         rolearn  = aws_iam_role.jenkins_ci.arn
+#         username = "jenkins" #change to preferred username
+#         groups   = ["system:masters"]
+#       }
+#     ])
+#   }
+# }
+
+# # ---------------------------
+# # Kubernetes Provider Configuration
+# # ---------------------------
+
+# # Use kubectl and Kubernetes resources
+# #   # Ensure the EKS cluster is active before creating the aws-auth config map
+# #   lifecycle {
+# #     ignore_changes = [
+# #       data
+# #     ]
+# #   }
+# # }
 
