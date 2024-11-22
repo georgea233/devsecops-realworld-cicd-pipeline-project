@@ -54,27 +54,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
-      - name: Set up kubectl and AWS CLI
+      - name: Verify AWS CLI Installation
         run: |
-          # Install AWS CLI and kubectl (if not already installed)
-          curl -sS https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o "awscliv2.zip"
-          unzip awscliv2.zip
-          sudo ./aws/install
+          aws --version
+
+      - name: Install kubectl
+        run: |
           curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/amd64/kubectl"
           chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
-          # Install or update AWS CLI
-          if ! command -v aws &> /dev/null; then
-            curl -sS https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-          else
-            sudo ./aws/install --update  # Update if AWS CLI is already installed
-          fi
-          # Install kubectl
-          curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.24.0/bin/linux/amd64/kubectl"
-          chmod +x ./kubectl
-          sudo mv ./kubectl /usr/local/bin/kubectl
+          sudo mv ./kubectl /usr/local/bin/kubectl 
 
       - name: Update kubeconfig for EKS cluster
         env:
