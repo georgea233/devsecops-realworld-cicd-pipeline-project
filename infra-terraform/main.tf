@@ -324,41 +324,41 @@ resource "null_resource" "backup_aws_auth" {
 resource "null_resource" "wait_for_eks_cluster" {
   depends_on = [
     aws_eks_cluster.example,
-    aws_eks_node_group.example,
+    aws_eks_node_group.example
   ]
 }
 
-resource "kubernetes_manifest" "aws_auth_patch" {
-  provider = kubernetes
+# resource "kubernetes_manifest" "aws_auth_patch" {
+#   provider = kubernetes
 
-  #depends_on = [null_resource.wait_for_eks_cluster]
+#   #depends_on = [null_resource.wait_for_eks_cluster]
   
-  manifest = {
-    "apiVersion" = "v1"
-    "kind"       = "ConfigMap"
-    "metadata" = {
-      "name"      = "aws-auth"
-      "namespace" = "kube-system"
-    }
-    "data" = {
-      "mapRoles" = "${data.kubernetes_config_map.aws_auth.data["mapRoles"]}${local.new_role}"
-    }
-  }
+#   manifest = {
+#     "apiVersion" = "v1"
+#     "kind"       = "ConfigMap"
+#     "metadata" = {
+#       "name"      = "aws-auth"
+#       "namespace" = "kube-system"
+#     }
+#     "data" = {
+#       "mapRoles" = "${data.kubernetes_config_map.aws_auth.data["mapRoles"]}${local.new_role}"
+#     }
+#   }
 
-  # Ensure this update runs only after the backup and cluster/nodegroup are ready
-  depends_on = [
-    null_resource.backup_aws_auth, 
-    aws_eks_cluster.example, 
-    aws_eks_node_group.example,
-    null_resource.wait_for_eks_cluster
-  ]
-}
+#   # Ensure this update runs only after the backup and cluster/nodegroup are ready
+#   depends_on = [
+#     null_resource.backup_aws_auth, 
+#     aws_eks_cluster.example, 
+#     aws_eks_node_group.example,
+#     null_resource.wait_for_eks_cluster
+#   ]
+# }
 
-provider "kubernetes" {
-  host                   = aws_eks_cluster.example.endpoint
-  cluster_ca_certificate = base64decode(aws_eks_cluster.example.certificate_authority[0].data)
-  token                  = data.aws_eks_cluster_auth.example.token
-}
+# provider "kubernetes" {
+#   host                   = aws_eks_cluster.example.endpoint
+#   cluster_ca_certificate = base64decode(aws_eks_cluster.example.certificate_authority[0].data)
+#   token                  = data.aws_eks_cluster_auth.example.token
+# }
 
 
 # #1. In this case, the data source checks the current state of the EKS cluster and allows you to perform actions based on the cluster's availability:
