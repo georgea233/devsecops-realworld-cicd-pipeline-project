@@ -13,11 +13,17 @@ provider "aws" {
 }
 
 data "aws_eks_cluster" "cluster" {
-  name = "your-eks-cluster-name"
+  name = aws_eks_cluster.cluster.name
+
+  # Optional: explicitly set dependencies to ensure EKS cluster is created first
+  depends_on = [aws_eks_cluster.cluster]
 }
 
 data "aws_eks_cluster_auth" "cluster" {
-  name = data.aws_eks_cluster.cluster.name
+  name = data.aws_eks_cluster.cluster.id # could laso have used name instead of id
+
+  # Optional: explicitly set dependencies to ensure EKS cluster is created first
+  depends_on = [aws_eks_cluster.cluster]
 }
 
 #rtee
