@@ -25,17 +25,19 @@ resource "aws_iam_instance_profile" "jenkins_instance_profile" {
   role = aws_iam_role.jenkins_ci.name
 }
 
-
+# Get default VPC and subnets
 data "aws_vpc" "default" {
   default = true
 }
 
+# Get public subnets for Jenkins CI
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
   }
 }
+
 
 resource "aws_security_group" "jenkins_ci" {
   name        = var.security_group_name
