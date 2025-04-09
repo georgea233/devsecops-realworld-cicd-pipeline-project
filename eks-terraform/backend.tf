@@ -5,6 +5,6 @@ terraform {
     region = "us-east-2"
 
     # Replace this with your DynamoDB table name!
-    use_lockfile = "fluentindevops-tf-state-lock"
+    use_lockfile = true
   }
 }
