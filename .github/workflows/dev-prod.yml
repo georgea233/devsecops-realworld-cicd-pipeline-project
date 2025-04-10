@@ -417,6 +417,6 @@ jobs:
 # #         working-directory: eks-terraform
 # #         run: terraform ${{ env.TF_ACTION }} --auto-approve
 
-# # name: EKS Deployment Pipeline - Dev
+# # name: EKS Deployment Pipeline - Dev# delte this
 
 
