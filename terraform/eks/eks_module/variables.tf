@@ -15,6 +15,7 @@ data "aws_subnets" "selected" {
 
 variable "eks_cluster_name" {
   type = string
+  default = "EKS-cluster"
 }
 
 # variable "access_key" {
