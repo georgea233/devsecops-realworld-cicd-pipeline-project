@@ -24,7 +24,7 @@ resource "aws_ec2_tag" "eks_subnet_tags" {
   for_each = toset(data.aws_subnets.selected.ids)
 
   resource_id = each.value
-  key         = "kubernetes.io/cluster/${var.eks}"
+  key         = "kubernetes.io/cluster/${var.eks_cluster_name}"
   value       = "owned"
 }
 
