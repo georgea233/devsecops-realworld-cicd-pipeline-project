@@ -41,6 +41,7 @@ variable "aws_eks_cluster_config" {
   }
 }
 
+#ewrewtre
 variable "eks_node_group_config" {
   default = {
     # "node1" = {
