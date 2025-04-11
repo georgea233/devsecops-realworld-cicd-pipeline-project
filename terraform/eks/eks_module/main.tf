@@ -20,6 +20,23 @@ module "aws_eks_node_group" {
   tags             = each.value.tags
 }
 
+resource "aws_ec2_tag" "eks_subnet_tags" {
+  for_each = toset(data.aws_subnets.selected.ids)
+
+  resource_id = each.value
+  key         = "kubernetes.io/cluster/${var.eks}"
+  value       = "owned"
+}
+
+resource "aws_ec2_tag" "eks_subnet_role_tag" {
+  for_each = toset(data.aws_subnets.selected.ids)
+
+  resource_id = each.value
+  key         = "kubernetes.io/role/internal-elb" # or "elb" for public subnets
+  value       = "1"
+}
+
+
 ##Infrastructure (VPC, Subnets etc) to host eks cluster and node group would already be created by the time eks cluster is created. so no need for the bleow: 
 
 # # Data source to fetch VPC ID

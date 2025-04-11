@@ -13,6 +13,10 @@ data "aws_subnets" "selected" {
   }
 }
 
+variable "eks_cluster_name" {
+  type = string
+}
+
 # variable "access_key" {
 #   default = ""
 # }
