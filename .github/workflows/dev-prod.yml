@@ -9,17 +9,10 @@ on:
 jobs:
   eks-deployment:
     runs-on: ubuntu-latest
-
-    # env:
-    #   AWS_REGION: "us-east-2"  # Set your desired AWS region
-    #   TF_ACTION: ${{ github.ref == 'refs/heads/main' && 'apply' || 'apply' }}  # Apply action for both branches
-    #   TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
-    
     env:
       AWS_REGION: "us-east-2"  # Set your desired AWS region
-      TF_ACTION: ${{ contains(github.event.head_commit.message, 'destroy') && 'destroy' || 'apply' }}  # Change to destroy if the commit message contains 'destroy'
+      TF_ACTION: ${{ contains(github.event.head_commit.message | toLowerCase(), 'destroy') && 'destroy' || 'apply' }}  # Change to destroy if the commit message contains 'destroy'
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Environment variable for Terraform
-
 
     steps:
       - name: Checkout EKS deployment repo
@@ -69,7 +62,8 @@ jobs:
 
   eks-destroy:
     runs-on: ubuntu-latest
-    needs: eks-deployment  # Ensure this runs after deployment
+    needs: eks-deployment  # Ensure this runs after deployment, but only if 'destroy' is in commit message
+    if: contains(github.event.head_commit.message | toLowerCase(), 'destroy')  # Run only if 'destroy' is in commit message (case-insensitive)
     env:
       AWS_REGION: "us-east-2"  # Set your desired AWS region
       TF_VAR_environment: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}  # Set environment variable for destroy
