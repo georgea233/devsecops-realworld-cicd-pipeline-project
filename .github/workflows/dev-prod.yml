@@ -107,8 +107,6 @@ jobs:
         if: github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main'  # Allow destroy on both branches
 
 
-##$3567
-
 
 # name: EKS Deployment Pipeline
 
