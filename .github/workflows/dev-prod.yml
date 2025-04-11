@@ -83,15 +83,15 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init - EKS
-        working-directory: terraform/eks
+        working-directory: terraform/eks/eks_module
         run: terraform init --reconfigure
 
       - name: Terraform Plan - EKS
-        working-directory: terraform/eks
+        working-directory: terraform/eks/eks_module
         run: terraform plan -out=tfplan
 
       - name: Terraform Apply - EKS
-        working-directory: terraform/eks
+        working-directory: terraform/eks/eks_module
         run: terraform apply -auto-approve tfplan
         if: github.ref == 'refs/heads/dev'
 
@@ -127,11 +127,11 @@ jobs:
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Terraform Init - EKS
-        working-directory: terraform/eks
+        working-directory: terraform/eks/eks_module
         run: terraform init --reconfigure
 
       - name: Terraform Destroy - EKS
-        working-directory: terraform/eks
+        working-directory: terraform/eks/eks_module
         run: terraform destroy -auto-approve
 
   # -----------------------------
